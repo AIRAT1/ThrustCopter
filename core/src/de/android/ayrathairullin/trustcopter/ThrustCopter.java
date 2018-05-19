@@ -9,31 +9,37 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class ThrustCopter extends ApplicationAdapter {
+	private static final int TOUCH_IMPULSE = 500;
+	private static final float TAP_DRAW_TIME_MAX = 1;
+
 	private FPSLogger fpsLogger;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
-	private TextureRegion backgroundRegion, terrainBelow, terrainAbove;
-	private float terrainOffset, planeAnimTime;
+	private TextureRegion backgroundRegion, terrainBelow, terrainAbove, tapIndicator;
+	private float terrainOffset, planeAnimTime, tapDrawTime;
 	private Animation<TextureRegion> plane;
 	private Vector2 planeVelocity = new Vector2();
 	private Vector2 planePosition = new Vector2();
 	private Vector2 planeDefaultPosition = new Vector2();
 	private Vector2 gravity = new Vector2();
+	private Vector2 tmpVector = new Vector2();
 	private static final Vector2 damping = new Vector2(.99f, .99f);
 	private TextureAtlas atlas;
 	private Viewport viewport;
+	private Vector3 touchPosition = new Vector3();
 
 	@Override
 	public void create () {
 		fpsLogger = new FPSLogger();
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
-//		camera.setToOrtho(false, 800,480);
 		camera.position.set(400, 240, 0);
 		viewport = new FitViewport(800, 480, camera);
 		atlas = new TextureAtlas(Gdx.files.internal("ThrustCopter.pack"));
@@ -74,6 +80,19 @@ public class ThrustCopter extends ApplicationAdapter {
 
 	private void updateScene() {
 		float deltaTime = Gdx.graphics.getDeltaTime();
+
+		if (Gdx.input.justTouched()) {
+			touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+			camera.unproject(touchPosition);
+			tmpVector.set(planePosition.x, planePosition.y);
+			tmpVector.sub(touchPosition.x, touchPosition.y).nor();
+			planeVelocity.mulAdd(tmpVector,
+					TOUCH_IMPULSE - MathUtils.clamp(Vector2.dst(touchPosition.x,
+							touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
+			tapDrawTime = TAP_DRAW_TIME_MAX;
+		}
+		tapDrawTime = - deltaTime;
+
 		planeAnimTime += deltaTime;
 		planeVelocity.scl(damping);
 		planeVelocity.add(gravity);
