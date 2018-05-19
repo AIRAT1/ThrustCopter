@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class ThrustCopter extends ApplicationAdapter {
 	private static final int TOUCH_IMPULSE = 500;
-	private static final float TAP_DRAW_TIME_MAX = 1;
+	private static final float TAP_DRAW_TIME_MAX = 1.0f;
 
 	private FPSLogger fpsLogger;
 	private SpriteBatch batch;
@@ -47,6 +47,7 @@ public class ThrustCopter extends ApplicationAdapter {
 		terrainBelow = atlas.findRegion("groundGrass");
 		terrainAbove = new TextureRegion(terrainBelow);
 		terrainAbove.flip(true, true);
+		tapIndicator = atlas.findRegion("tap2");
 		plane = new Animation<TextureRegion>(.05f, atlas.findRegion("planeRed1"),
 				atlas.findRegion("planeRed2"),
 				atlas.findRegion("planeRed3"),
@@ -91,7 +92,7 @@ public class ThrustCopter extends ApplicationAdapter {
 							touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
 			tapDrawTime = TAP_DRAW_TIME_MAX;
 		}
-		tapDrawTime = - deltaTime;
+		tapDrawTime -= deltaTime;
 
 		planeAnimTime += deltaTime;
 		planeVelocity.scl(damping);
@@ -121,6 +122,10 @@ public class ThrustCopter extends ApplicationAdapter {
 		batch.draw(terrainAbove, terrainOffset + terrainAbove.getRegionWidth(), 480 - terrainAbove.getRegionHeight());
 
 		batch.draw(plane.getKeyFrame(planeAnimTime), planePosition.x, planePosition.y);
+
+		if (tapDrawTime > 0) {
+			batch.draw(tapIndicator, touchPosition.x - 29.5f, touchPosition.y - 29.5f);
+		}
 
 		batch.end();
 	}
