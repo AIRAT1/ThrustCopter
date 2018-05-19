@@ -5,11 +5,13 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class ThrustCopter extends ApplicationAdapter {
 	private FPSLogger fpsLogger;
@@ -23,30 +25,40 @@ public class ThrustCopter extends ApplicationAdapter {
 	private Vector2 planeDefaultPosition = new Vector2();
 	private Vector2 gravity = new Vector2();
 	private static final Vector2 damping = new Vector2(.99f, .99f);
+	private TextureAtlas atlas;
+	private Viewport viewport;
 
 	@Override
 	public void create () {
 		fpsLogger = new FPSLogger();
 		batch = new SpriteBatch();
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 800,480);
-		backgroundRegion = new TextureRegion(new Texture("background.png"));
-		terrainBelow = new TextureRegion(new Texture("groundGrass.png"));
+//		camera.setToOrtho(false, 800,480);
+		camera.position.set(400, 240, 0);
+		viewport = new FitViewport(800, 480, camera);
+		atlas = new TextureAtlas(Gdx.files.internal("ThrustCopter.pack"));
+		backgroundRegion = atlas.findRegion("background");
+		terrainBelow = atlas.findRegion("groundGrass");
 		terrainAbove = new TextureRegion(terrainBelow);
 		terrainAbove.flip(true, true);
-		plane = new Animation<TextureRegion>(.05f, new TextureRegion(new Texture("planeRed1.png")),
-				new TextureRegion(new Texture("planeRed2.png")),
-				new TextureRegion(new Texture("planeRed3.png")),
-				new TextureRegion(new Texture("planeRed2.png")));
+		plane = new Animation<TextureRegion>(.05f, atlas.findRegion("planeRed1"),
+				atlas.findRegion("planeRed2"),
+				atlas.findRegion("planeRed3"),
+				atlas.findRegion("planeRed2"));
 		plane.setPlayMode(Animation.PlayMode.LOOP);
 		resetScene();
+	}
+
+	@Override
+	public void resize(int width, int height) {
+		viewport.update(width, height);
 	}
 
 	private void resetScene() {
 		terrainOffset = 0;
 		planeAnimTime = 0;
 		planeVelocity.set(400, 0);
-		gravity.set(0, -4);
+		gravity.set(0, -2);
 		planeDefaultPosition.set(400 - 88 / 2, 240 - 273 / 2);
 		planePosition.set(planeDefaultPosition.x, planeDefaultPosition.y);
 	}
