@@ -2,10 +2,10 @@ package de.android.ayrathairullin.trustcopter;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -20,10 +20,15 @@ public class ThrustCopter extends ApplicationAdapter {
 	private static final int TOUCH_IMPULSE = 500;
 	private static final float TAP_DRAW_TIME_MAX = 1.0f;
 
+	static enum GameState {
+		INIT, ACTION, GAME_OVER
+	}
+
+	private GameState gameState = GameState.INIT;
 	private FPSLogger fpsLogger;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
-	private TextureRegion backgroundRegion, terrainBelow, terrainAbove, tapIndicator;
+	private TextureRegion backgroundRegion, terrainBelow, terrainAbove, tapIndicator, tap1, gameOver;
 	private float terrainOffset, planeAnimTime, tapDrawTime;
 	private Animation<TextureRegion> plane;
 	private Vector2 planeVelocity = new Vector2();
@@ -35,8 +40,6 @@ public class ThrustCopter extends ApplicationAdapter {
 	private TextureAtlas atlas;
 	private Viewport viewport;
 	private Vector3 touchPosition = new Vector3();
-
-	private InputAdapter inputAdapter;
 
 	@Override
 	public void create () {
@@ -51,28 +54,14 @@ public class ThrustCopter extends ApplicationAdapter {
 		terrainAbove = new TextureRegion(terrainBelow);
 		terrainAbove.flip(true, true);
 		tapIndicator = atlas.findRegion("tap2");
+		tap1 = atlas.findRegion("tap1");
+		gameOver = new TextureRegion(new Texture("gameover.png"));
 		plane = new Animation<TextureRegion>(.05f, atlas.findRegion("planeRed1"),
 				atlas.findRegion("planeRed2"),
 				atlas.findRegion("planeRed3"),
 				atlas.findRegion("planeRed2"));
 		plane.setPlayMode(Animation.PlayMode.LOOP);
 		resetScene();
-
-		inputAdapter = new InputAdapter(){
-			@Override
-			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-				touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-				camera.unproject(touchPosition);
-				tmpVector.set(planePosition.x, planePosition.y);
-				tmpVector.sub(touchPosition.x, touchPosition.y).nor();
-				planeVelocity.mulAdd(tmpVector,
-						TOUCH_IMPULSE - MathUtils.clamp(Vector2.dst(touchPosition.x,
-								touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
-				tapDrawTime = TAP_DRAW_TIME_MAX;
-				return true;
-			}
-		};
-		Gdx.input.setInputProcessor(inputAdapter);
 	}
 
 	@Override
@@ -99,19 +88,29 @@ public class ThrustCopter extends ApplicationAdapter {
 	}
 
 	private void updateScene() {
+		if (Gdx.input.justTouched()) {
+			if (gameState == GameState.INIT) {
+				gameState = GameState.ACTION;
+				return;
+			}
+			if (gameState == GameState.GAME_OVER) {
+				gameState = GameState.INIT;
+				resetScene();
+				return;
+			}
+			touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+			camera.unproject(touchPosition);
+			tmpVector.set(planePosition.x, planePosition.y);
+			tmpVector.sub(touchPosition.x, touchPosition.y).nor();
+			planeVelocity.mulAdd(tmpVector,
+					TOUCH_IMPULSE - MathUtils.clamp(Vector2.dst(touchPosition.x,
+							touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
+			tapDrawTime = TAP_DRAW_TIME_MAX;
+		}
+		if (gameState == GameState.INIT || gameState == GameState.GAME_OVER) {
+			return;
+		}
 		float deltaTime = Gdx.graphics.getDeltaTime();
-
-//		without inputAdapter
-//		if (Gdx.input.justTouched()) {
-//			touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-//			camera.unproject(touchPosition);
-//			tmpVector.set(planePosition.x, planePosition.y);
-//			tmpVector.sub(touchPosition.x, touchPosition.y).nor();
-//			planeVelocity.mulAdd(tmpVector,
-//					TOUCH_IMPULSE - MathUtils.clamp(Vector2.dst(touchPosition.x,
-//							touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
-//			tapDrawTime = TAP_DRAW_TIME_MAX;
-//		}
 		tapDrawTime -= deltaTime;
 
 		planeAnimTime += deltaTime;
@@ -125,6 +124,13 @@ public class ThrustCopter extends ApplicationAdapter {
 		}
 		if (terrainOffset > 0) {
 			terrainOffset = - terrainBelow.getRegionWidth();
+		}
+		if (planePosition.y < terrainBelow.getRegionHeight() - 35 ||
+				planePosition.y + 73 > 480 - terrainBelow.getRegionHeight() + 35) {
+			if (gameState != GameState.GAME_OVER) {
+				tapDrawTime = 0;
+				gameState = GameState.GAME_OVER;
+			}
 		}
 	}
 
@@ -145,6 +151,14 @@ public class ThrustCopter extends ApplicationAdapter {
 
 		if (tapDrawTime > 0) {
 			batch.draw(tapIndicator, touchPosition.x - 29.5f, touchPosition.y - 29.5f);
+		}
+
+		if (gameState == GameState.INIT) {
+			batch.draw(tap1, planePosition.x, planePosition.y - 80);
+		}
+
+		if (gameState == GameState.GAME_OVER) {
+			batch.draw(gameOver, 400 - 206, 240 - 80);
 		}
 
 		batch.end();
