@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
@@ -45,6 +46,8 @@ public class ThrustCopter extends ApplicationAdapter {
 	private Viewport viewport;
 	private Vector3 touchPosition = new Vector3();
 	private Array<Vector2> pillars = new Array<Vector2>();
+	private Rectangle planeRect = new Rectangle();
+	private Rectangle obstacleRect = new Rectangle();
 
 	@Override
 	public void create () {
@@ -154,10 +157,24 @@ public class ThrustCopter extends ApplicationAdapter {
 			terrainOffset = - terrainBelow.getRegionWidth();
 		}
 
+		planeRect.set(planePosition.x + 16, planePosition.y, 50, 73);
 		for (Vector2 vec : pillars) {
 			vec.x -= deltaPosition;
 			if (vec.x + pillarUp.getRegionWidth() < - 10) {
 				pillars.removeValue(vec, false);
+			}
+			if (vec.y == 1) {
+				obstacleRect.set(vec.x + 10, 0, pillarUp.getRegionWidth() - 20,
+						pillarUp.getRegionHeight() - 10);
+			}else {
+				obstacleRect.set(vec.x + 10, 480 - pillarDown.getRegionHeight() + 10,
+						pillarUp.getRegionWidth() - 20, pillarUp.getRegionHeight());
+			}
+			if (planeRect.overlaps(obstacleRect)) {
+				if (gameState != GameState.GAME_OVER) {
+					tapDrawTime = 0;
+					gameState = GameState.GAME_OVER;
+				}
 			}
 		}
 		if (lastPillarPosition.x < 400) {
