@@ -13,6 +13,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
@@ -28,18 +29,22 @@ public class ThrustCopter extends ApplicationAdapter {
 	private FPSLogger fpsLogger;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
-	private TextureRegion backgroundRegion, terrainBelow, terrainAbove, tapIndicator, tap1, gameOver;
-	private float terrainOffset, planeAnimTime, tapDrawTime;
+	private TextureRegion backgroundRegion, terrainBelow, terrainAbove, tapIndicator, tap1, gameOver,
+	pillarUp, pillarDown;
+	private float terrainOffset, planeAnimTime, tapDrawTime, deltaPosition;
 	private Animation<TextureRegion> plane;
 	private Vector2 planeVelocity = new Vector2();
 	private Vector2 planePosition = new Vector2();
 	private Vector2 planeDefaultPosition = new Vector2();
 	private Vector2 gravity = new Vector2();
 	private Vector2 tmpVector = new Vector2();
+	private Vector2 scrollVelocity = new Vector2();
+	private Vector2 lastPillarPosition = new Vector2();
 	private static final Vector2 damping = new Vector2(.99f, .99f);
 	private TextureAtlas atlas;
 	private Viewport viewport;
 	private Vector3 touchPosition = new Vector3();
+	private Array<Vector2> pillars = new Array<Vector2>();
 
 	@Override
 	public void create () {
@@ -56,6 +61,8 @@ public class ThrustCopter extends ApplicationAdapter {
 		tapIndicator = atlas.findRegion("tap2");
 		tap1 = atlas.findRegion("tap1");
 		gameOver = new TextureRegion(new Texture("gameover.png"));
+		pillarUp = atlas.findRegion("rockGrassUp");
+		pillarDown = atlas.findRegion("rockGrassDown");
 		plane = new Animation<TextureRegion>(.05f, atlas.findRegion("planeRed1"),
 				atlas.findRegion("planeRed2"),
 				atlas.findRegion("planeRed3"),
@@ -73,9 +80,28 @@ public class ThrustCopter extends ApplicationAdapter {
 		terrainOffset = 0;
 		planeAnimTime = 0;
 		planeVelocity.set(400, 0);
+		scrollVelocity.set(4, 0);
 		gravity.set(0, -2);
 		planeDefaultPosition.set(400 - 88 / 2, 240 - 273 / 2);
 		planePosition.set(planeDefaultPosition.x, planeDefaultPosition.y);
+		pillars.clear();
+		addPillar();
+	}
+
+	private void addPillar() {
+		Vector2 pillarPosition = new Vector2();
+		if (pillars.size == 0) {
+			pillarPosition.x = (float)(800 + Math.random() * 600);
+		}else {
+			pillarPosition.x = lastPillarPosition.x + (float)(600 + Math.random() * 600);
+		}
+		if (MathUtils.randomBoolean()) {
+			pillarPosition.y = 1;
+		}else {
+			pillarPosition.y = -1;
+		}
+		lastPillarPosition = pillarPosition;
+		pillars.add(pillarPosition);
 	}
 
 	@Override
@@ -116,8 +142,10 @@ public class ThrustCopter extends ApplicationAdapter {
 		planeAnimTime += deltaTime;
 		planeVelocity.scl(damping);
 		planeVelocity.add(gravity);
+		planeVelocity.add(scrollVelocity);
 		planePosition.mulAdd(planeVelocity, deltaTime);
-		terrainOffset -= planePosition.x - planeDefaultPosition.x;
+		deltaPosition = planePosition.x - planeDefaultPosition.x;
+		terrainOffset -= deltaPosition;
 		planePosition.x = planeDefaultPosition.x;
 		if (terrainOffset * - 1 > terrainBelow.getRegionWidth()) {
 			terrainOffset = 0;
@@ -125,6 +153,17 @@ public class ThrustCopter extends ApplicationAdapter {
 		if (terrainOffset > 0) {
 			terrainOffset = - terrainBelow.getRegionWidth();
 		}
+
+		for (Vector2 vec : pillars) {
+			vec.x -= deltaPosition;
+			if (vec.x + pillarUp.getRegionWidth() < - 10) {
+				pillars.removeValue(vec, false);
+			}
+		}
+		if (lastPillarPosition.x < 400) {
+			addPillar();
+		}
+
 		if (planePosition.y < terrainBelow.getRegionHeight() - 35 ||
 				planePosition.y + 73 > 480 - terrainBelow.getRegionHeight() + 35) {
 			if (gameState != GameState.GAME_OVER) {
@@ -142,6 +181,13 @@ public class ThrustCopter extends ApplicationAdapter {
 		batch.draw(backgroundRegion, 0, 0);
 		batch.enableBlending();
 
+		for (Vector2 vec : pillars) {
+			if (vec.y == 1) {
+				batch.draw(pillarUp, vec.x, 0);
+			}else {
+				batch.draw(pillarDown, vec.x, 480 - pillarDown.getRegionHeight());
+			}
+		}
 		batch.draw(terrainBelow, terrainOffset, 0);
 		batch.draw(terrainBelow, terrainOffset + terrainBelow.getRegionWidth(), 0);
 		batch.draw(terrainAbove, terrainOffset, 480 - terrainAbove.getRegionHeight());
