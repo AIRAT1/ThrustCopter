@@ -2,6 +2,7 @@ package de.android.ayrathairullin.trustcopter;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -35,6 +36,8 @@ public class ThrustCopter extends ApplicationAdapter {
 	private Viewport viewport;
 	private Vector3 touchPosition = new Vector3();
 
+	private InputAdapter inputAdapter;
+
 	@Override
 	public void create () {
 		fpsLogger = new FPSLogger();
@@ -54,6 +57,22 @@ public class ThrustCopter extends ApplicationAdapter {
 				atlas.findRegion("planeRed2"));
 		plane.setPlayMode(Animation.PlayMode.LOOP);
 		resetScene();
+
+		inputAdapter = new InputAdapter(){
+			@Override
+			public boolean touchDown(int screenX, int screenY, int pointer, int button) {
+				touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+				camera.unproject(touchPosition);
+				tmpVector.set(planePosition.x, planePosition.y);
+				tmpVector.sub(touchPosition.x, touchPosition.y).nor();
+				planeVelocity.mulAdd(tmpVector,
+						TOUCH_IMPULSE - MathUtils.clamp(Vector2.dst(touchPosition.x,
+								touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
+				tapDrawTime = TAP_DRAW_TIME_MAX;
+				return true;
+			}
+		};
+		Gdx.input.setInputProcessor(inputAdapter);
 	}
 
 	@Override
@@ -82,16 +101,17 @@ public class ThrustCopter extends ApplicationAdapter {
 	private void updateScene() {
 		float deltaTime = Gdx.graphics.getDeltaTime();
 
-		if (Gdx.input.justTouched()) {
-			touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
-			camera.unproject(touchPosition);
-			tmpVector.set(planePosition.x, planePosition.y);
-			tmpVector.sub(touchPosition.x, touchPosition.y).nor();
-			planeVelocity.mulAdd(tmpVector,
-					TOUCH_IMPULSE - MathUtils.clamp(Vector2.dst(touchPosition.x,
-							touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
-			tapDrawTime = TAP_DRAW_TIME_MAX;
-		}
+//		without inputAdapter
+//		if (Gdx.input.justTouched()) {
+//			touchPosition.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+//			camera.unproject(touchPosition);
+//			tmpVector.set(planePosition.x, planePosition.y);
+//			tmpVector.sub(touchPosition.x, touchPosition.y).nor();
+//			planeVelocity.mulAdd(tmpVector,
+//					TOUCH_IMPULSE - MathUtils.clamp(Vector2.dst(touchPosition.x,
+//							touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
+//			tapDrawTime = TAP_DRAW_TIME_MAX;
+//		}
 		tapDrawTime -= deltaTime;
 
 		planeAnimTime += deltaTime;
