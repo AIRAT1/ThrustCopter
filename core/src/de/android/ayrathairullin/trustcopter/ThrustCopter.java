@@ -2,6 +2,8 @@ package de.android.ayrathairullin.trustcopter;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
@@ -21,7 +23,7 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class ThrustCopter extends ApplicationAdapter {
 	private static final int TOUCH_IMPULSE = 500;
 	private static final float TAP_DRAW_TIME_MAX = 1.0f;
-	private static final int METEOR_SPEED = 60;
+	private static final int METEOR_SPEED = 6; // TODO default value 60
 
 	enum GameState {
 		INIT, ACTION, GAME_OVER
@@ -53,7 +55,8 @@ public class ThrustCopter extends ApplicationAdapter {
 	private Rectangle obstacleRect = new Rectangle();
 	private Array<TextureAtlas.AtlasRegion> meteorTextures = new Array<TextureAtlas.AtlasRegion>();
 	private boolean meteorInScene;
-
+	private Music music;
+	private Sound tapSound, crashSound, spawnSound;
 
 	@Override
 	public void create () {
@@ -84,6 +87,14 @@ public class ThrustCopter extends ApplicationAdapter {
 				atlas.findRegion("planeRed2"));
 		plane.setPlayMode(Animation.PlayMode.LOOP);
 		resetScene();
+
+		music = Gdx.audio.newMusic(Gdx.files.internal("sounds/journey.mp3"));
+		music.setLooping(true);
+		music.play();
+
+		tapSound = Gdx.audio.newSound(Gdx.files.internal("sounds/pop.ogg"));
+		crashSound = Gdx.audio.newSound(Gdx.files.internal("sounds/crash.ogg"));
+		spawnSound = Gdx.audio.newSound(Gdx.files.internal("sounds/alarm.ogg"));
 	}
 
 	@Override
@@ -97,7 +108,7 @@ public class ThrustCopter extends ApplicationAdapter {
 		planeVelocity.set(400, 0);
 		scrollVelocity.set(4, 0);
 		gravity.set(0, -2);
-		planeDefaultPosition.set(400 - 88 / 2, 240 - 273 / 2);
+		planeDefaultPosition.set(100 - 88 / 2, 240 - 273 / 2); // TODO 100 was 400 default
 		planePosition.set(planeDefaultPosition.x, planeDefaultPosition.y);
 		pillars.clear();
 		addPillar();
@@ -132,6 +143,7 @@ public class ThrustCopter extends ApplicationAdapter {
 
 	private void updateScene() {
 		if (Gdx.input.justTouched()) {
+			tapSound.play();
 			if (gameState == GameState.INIT) {
 				gameState = GameState.ACTION;
 				return;
@@ -177,6 +189,16 @@ public class ThrustCopter extends ApplicationAdapter {
 			if (meteorPosition.x < - 10) {
 				meteorInScene = false;
 			}
+			obstacleRect.set(meteorPosition.x + 2, meteorPosition.y + 2,
+					selectedMeteorTexture.getRegionWidth() - 4,
+					selectedMeteorTexture.getRegionHeight() - 4);
+			if (planeRect.overlaps(obstacleRect)) {
+				if (gameState != GameState.GAME_OVER) {
+					tapDrawTime = 0;
+					crashSound.play();
+					gameState = GameState.GAME_OVER;
+				}
+			}
 		}
 		nextMeteorIn = - deltaTime;
 		if (nextMeteorIn <= 0) {
@@ -199,6 +221,7 @@ public class ThrustCopter extends ApplicationAdapter {
 			if (planeRect.overlaps(obstacleRect)) {
 				if (gameState != GameState.GAME_OVER) {
 					tapDrawTime = 0;
+					crashSound.play();
 					gameState = GameState.GAME_OVER;
 				}
 			}
@@ -211,6 +234,7 @@ public class ThrustCopter extends ApplicationAdapter {
 				planePosition.y + 73 > 480 - terrainBelow.getRegionHeight() + 35) {
 			if (gameState != GameState.GAME_OVER) {
 				tapDrawTime = 0;
+				crashSound.play();
 				gameState = GameState.GAME_OVER;
 			}
 		}
@@ -221,6 +245,7 @@ public class ThrustCopter extends ApplicationAdapter {
 		if (meteorInScene) {
 			return;
 		}
+		spawnSound.play();
 		meteorInScene = true;
 		int id = (int)Math.random() * meteorTextures.size;
 		selectedMeteorTexture = meteorTextures.get(id);
@@ -277,5 +302,12 @@ public class ThrustCopter extends ApplicationAdapter {
 	@Override
 	public void dispose () {
 		batch.dispose();
+		music.dispose();
+		pillars.clear();
+		atlas.dispose();
+		meteorTextures.clear();
+		tapSound.dispose();
+		crashSound.dispose();
+		spawnSound.dispose();
 	}
 }
