@@ -21,8 +21,9 @@ import com.badlogic.gdx.utils.viewport.Viewport;
 public class ThrustCopter extends ApplicationAdapter {
 	private static final int TOUCH_IMPULSE = 500;
 	private static final float TAP_DRAW_TIME_MAX = 1.0f;
+	private static final int METEOR_SPEED = 60;
 
-	static enum GameState {
+	enum GameState {
 		INIT, ACTION, GAME_OVER
 	}
 
@@ -31,8 +32,8 @@ public class ThrustCopter extends ApplicationAdapter {
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
 	private TextureRegion backgroundRegion, terrainBelow, terrainAbove, tapIndicator, tap1, gameOver,
-	pillarUp, pillarDown;
-	private float terrainOffset, planeAnimTime, tapDrawTime, deltaPosition;
+	pillarUp, pillarDown, selectedMeteorTexture;
+	private float terrainOffset, planeAnimTime, tapDrawTime, deltaPosition, nextMeteorIn;
 	private Animation<TextureRegion> plane;
 	private Vector2 planeVelocity = new Vector2();
 	private Vector2 planePosition = new Vector2();
@@ -41,6 +42,8 @@ public class ThrustCopter extends ApplicationAdapter {
 	private Vector2 tmpVector = new Vector2();
 	private Vector2 scrollVelocity = new Vector2();
 	private Vector2 lastPillarPosition = new Vector2();
+	private Vector2 meteorPosition = new Vector2();
+	private Vector2 meteorVelocity = new Vector2();
 	private static final Vector2 damping = new Vector2(.99f, .99f);
 	private TextureAtlas atlas;
 	private Viewport viewport;
@@ -48,6 +51,9 @@ public class ThrustCopter extends ApplicationAdapter {
 	private Array<Vector2> pillars = new Array<Vector2>();
 	private Rectangle planeRect = new Rectangle();
 	private Rectangle obstacleRect = new Rectangle();
+	private Array<TextureAtlas.AtlasRegion> meteorTextures = new Array<TextureAtlas.AtlasRegion>();
+	private boolean meteorInScene;
+
 
 	@Override
 	public void create () {
@@ -66,6 +72,12 @@ public class ThrustCopter extends ApplicationAdapter {
 		gameOver = new TextureRegion(new Texture("gameover.png"));
 		pillarUp = atlas.findRegion("rockGrassUp");
 		pillarDown = atlas.findRegion("rockGrassDown");
+		meteorTextures.add(atlas.findRegion("meteorBrown_med1"));
+		meteorTextures.add(atlas.findRegion("meteorBrown_med2"));
+		meteorTextures.add(atlas.findRegion("meteorBrown_small1"));
+		meteorTextures.add(atlas.findRegion("meteorBrown_small2"));
+		meteorTextures.add(atlas.findRegion("meteorBrown_tiny1"));
+		meteorTextures.add(atlas.findRegion("meteorBrown_tiny2"));
 		plane = new Animation<TextureRegion>(.05f, atlas.findRegion("planeRed1"),
 				atlas.findRegion("planeRed2"),
 				atlas.findRegion("planeRed3"),
@@ -89,6 +101,8 @@ public class ThrustCopter extends ApplicationAdapter {
 		planePosition.set(planeDefaultPosition.x, planeDefaultPosition.y);
 		pillars.clear();
 		addPillar();
+		meteorInScene = false;
+		nextMeteorIn = (float)Math.random() * 5;
 	}
 
 	private void addPillar() {
@@ -157,6 +171,18 @@ public class ThrustCopter extends ApplicationAdapter {
 			terrainOffset = - terrainBelow.getRegionWidth();
 		}
 
+		if (meteorInScene) {
+			meteorPosition.mulAdd(meteorVelocity, deltaTime);
+			meteorPosition.x -= deltaPosition;
+			if (meteorPosition.x < - 10) {
+				meteorInScene = false;
+			}
+		}
+		nextMeteorIn = - deltaTime;
+		if (nextMeteorIn <= 0) {
+			launchMeteor();
+		}
+
 		planeRect.set(planePosition.x + 16, planePosition.y, 50, 73);
 		for (Vector2 vec : pillars) {
 			vec.x -= deltaPosition;
@@ -188,6 +214,23 @@ public class ThrustCopter extends ApplicationAdapter {
 				gameState = GameState.GAME_OVER;
 			}
 		}
+	}
+
+	private void launchMeteor() {
+		nextMeteorIn = 1.5f + (float)Math.random() * 5;
+		if (meteorInScene) {
+			return;
+		}
+		meteorInScene = true;
+		int id = (int)Math.random() * meteorTextures.size;
+		selectedMeteorTexture = meteorTextures.get(id);
+		meteorPosition.x = 810;
+		meteorPosition.y = (float)(80 + Math.random() * 320);
+		Vector2 destination = new Vector2();
+		destination.x = - 10;
+		destination.y = (float)(80 + Math.random() * 320);
+		destination.sub(meteorPosition).nor();
+		meteorVelocity.mulAdd(destination, METEOR_SPEED);
 	}
 
 	private void drawScene() {
@@ -222,6 +265,10 @@ public class ThrustCopter extends ApplicationAdapter {
 
 		if (gameState == GameState.GAME_OVER) {
 			batch.draw(gameOver, 400 - 206, 240 - 80);
+		}
+
+		if (meteorInScene) {
+			batch.draw(selectedMeteorTexture, meteorPosition.x, meteorPosition.y);
 		}
 
 		batch.end();
