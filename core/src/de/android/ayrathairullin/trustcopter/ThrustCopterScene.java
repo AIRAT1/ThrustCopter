@@ -4,7 +4,6 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
-import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -17,8 +16,6 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
-import com.badlogic.gdx.utils.viewport.FitViewport;
-import com.badlogic.gdx.utils.viewport.Viewport;
 
 public class ThrustCopterScene extends ScreenAdapter {
 	private static final int TOUCH_IMPULSE = 500;
@@ -29,8 +26,8 @@ public class ThrustCopterScene extends ScreenAdapter {
 		INIT, ACTION, GAME_OVER
 	}
 
+	private ThrustCopter game;
 	private GameState gameState = GameState.INIT;
-	private FPSLogger fpsLogger;
 	private SpriteBatch batch;
 	private OrthographicCamera camera;
 	private TextureRegion backgroundRegion, terrainBelow, terrainAbove, tapIndicator, tap1, gameOver,
@@ -48,7 +45,6 @@ public class ThrustCopterScene extends ScreenAdapter {
 	private Vector2 meteorVelocity = new Vector2();
 	private static final Vector2 damping = new Vector2(.99f, .99f);
 	private TextureAtlas atlas;
-	private Viewport viewport;
 	private Vector3 touchPosition = new Vector3();
 	private Array<Vector2> pillars = new Array<Vector2>();
 	private Rectangle planeRect = new Rectangle();
@@ -58,13 +54,12 @@ public class ThrustCopterScene extends ScreenAdapter {
 	private Music music;
 	private Sound tapSound, crashSound, spawnSound;
 
-	public ThrustCopterScene () {
-		fpsLogger = new FPSLogger();
-		batch = new SpriteBatch();
-		camera = new OrthographicCamera();
+	public ThrustCopterScene (ThrustCopter thrustCopter) {
+		game = thrustCopter;
+		batch = game.batch;
+		camera = game.camera;
 		camera.position.set(400, 240, 0);
-		viewport = new FitViewport(800, 480, camera);
-		atlas = new TextureAtlas(Gdx.files.internal("ThrustCopter.pack"));
+		atlas = game.atlas;
 		backgroundRegion = atlas.findRegion("background");
 		terrainBelow = atlas.findRegion("groundGrass");
 		terrainAbove = new TextureRegion(terrainBelow);
@@ -94,11 +89,6 @@ public class ThrustCopterScene extends ScreenAdapter {
 		tapSound = Gdx.audio.newSound(Gdx.files.internal("sounds/pop.ogg"));
 		crashSound = Gdx.audio.newSound(Gdx.files.internal("sounds/crash.ogg"));
 		spawnSound = Gdx.audio.newSound(Gdx.files.internal("sounds/alarm.ogg"));
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		viewport.update(width, height);
 	}
 
 	private void resetScene() {
@@ -135,7 +125,6 @@ public class ThrustCopterScene extends ScreenAdapter {
 	public void render (float delta) {
 		Gdx.gl.glClearColor(1, 0, 0, 1);
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-		fpsLogger.log();
 		updateScene();
 		drawScene();
 	}
@@ -300,10 +289,8 @@ public class ThrustCopterScene extends ScreenAdapter {
 
 	@Override
 	public void dispose () {
-		batch.dispose();
 		music.dispose();
 		pillars.clear();
-		atlas.dispose();
 		meteorTextures.clear();
 		tapSound.dispose();
 		crashSound.dispose();
