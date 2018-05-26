@@ -66,7 +66,7 @@ public class ThrustCopterScene extends ScreenAdapter {
 		terrainAbove.flip(true, true);
 		tapIndicator = atlas.findRegion("tap2");
 		tap1 = atlas.findRegion("tap1");
-		gameOver = new TextureRegion(new Texture("gameover.png"));
+		gameOver = new TextureRegion(game.manager.get("gameover.png", Texture.class));
 		pillarUp = atlas.findRegion("rockGrassUp");
 		pillarDown = atlas.findRegion("rockGrassDown");
 		meteorTextures.add(atlas.findRegion("meteorBrown_med1"));
@@ -82,13 +82,13 @@ public class ThrustCopterScene extends ScreenAdapter {
 		plane.setPlayMode(Animation.PlayMode.LOOP);
 		resetScene();
 
-		music = Gdx.audio.newMusic(Gdx.files.internal("sounds/journey.mp3"));
+		music = game.manager.get("sounds/journey.mp3", Music.class);
 		music.setLooping(true);
 		music.play();
 
-		tapSound = Gdx.audio.newSound(Gdx.files.internal("sounds/pop.ogg"));
-		crashSound = Gdx.audio.newSound(Gdx.files.internal("sounds/crash.ogg"));
-		spawnSound = Gdx.audio.newSound(Gdx.files.internal("sounds/alarm.ogg"));
+		tapSound = game.manager.get("sounds/pop.ogg", Sound.class);
+		crashSound = game.manager.get("sounds/crash.ogg", Sound.class);
+		spawnSound = game.manager.get("sounds/alarm.ogg", Sound.class);
 	}
 
 	private void resetScene() {
