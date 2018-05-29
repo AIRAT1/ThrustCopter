@@ -189,6 +189,7 @@ public class ThrustCopterScene extends ScreenAdapter {
             }
             return;
         }
+
         //float deltaTime = Gdx.graphics.getDeltaTime();
         planeAnimTime+=deltaTime;
         planeVelocity.scl(damping);
