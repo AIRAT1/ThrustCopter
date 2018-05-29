@@ -110,6 +110,8 @@ public class ThrustCopterScene extends ScreenAdapter {
         crashSound = game.manager.get("sounds/crash.ogg", Sound.class);
         spawnSound = game.manager.get("sounds/alarm.ogg", Sound.class);
         fuelIndicator = game.manager.get("life.png", Texture.class);
+
+        font = game.manager.get("impact-40.fnt", BitmapFont.class);
     }
 
     private void resetScene() {
@@ -122,6 +124,7 @@ public class ThrustCopterScene extends ScreenAdapter {
         planeAnimTime = 0;
         tapDrawTime = 0;
         starCount = 0;
+        score = 0;
         shieldCount = 15;
         fuelCount = 100;
         fuelPercentage = 114;
@@ -395,6 +398,8 @@ public class ThrustCopterScene extends ScreenAdapter {
         batch.draw(fuelIndicator, 10, 350);
         batch.setColor(Color.WHITE);
         batch.draw(fuelIndicator, 10, 350, 0, 0, fuelPercentage, 119);
+        font.draw(batch, String.format(("%d"), (int)shieldCount), 390, 450);
+        font.draw(batch, String.format(("%d"), (int)(starCount + score)), 700, 450);
 
         batch.end();
     }

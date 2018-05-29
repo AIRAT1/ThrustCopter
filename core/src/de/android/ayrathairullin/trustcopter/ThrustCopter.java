@@ -8,6 +8,7 @@ import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -45,6 +46,7 @@ public class ThrustCopter extends Game {
         manager.load("sounds/shield.ogg", Sound.class);
         manager.load("sounds/fuel.ogg", Sound.class);
         manager.load("ThrustCopter.pack", TextureAtlas.class);
+        manager.load("impact-40.fnt", BitmapFont.class);
         manager.finishLoading();
 
         batch = new SpriteBatch();
