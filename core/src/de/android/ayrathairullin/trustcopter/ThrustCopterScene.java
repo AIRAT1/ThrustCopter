@@ -100,7 +100,6 @@ public class ThrustCopterScene extends ScreenAdapter {
                 atlas.findRegion("shield3"),
                 atlas.findRegion("shield2"));
         shield.setPlayMode(PlayMode.LOOP);
-        resetScene();
 
         music = game.manager.get("sounds/journey.mp3", Music.class);
         music.setLooping(true);
@@ -112,6 +111,10 @@ public class ThrustCopterScene extends ScreenAdapter {
         fuelIndicator = game.manager.get("life.png", Texture.class);
 
         font = game.manager.get("impact-40.fnt", BitmapFont.class);
+        smoke = game.manager.get("Smoke",  ParticleEffect.class);
+        explosion = game.manager.get("Explosion",  ParticleEffect.class);
+
+        resetScene();
     }
 
     private void resetScene() {
@@ -136,6 +139,7 @@ public class ThrustCopterScene extends ScreenAdapter {
         pillars.clear();
         pickupsInScene.clear();
         addPillar();
+        smoke.setPosition(planePosition.x + 20, planePosition.y + 30);
     }
 
     private void addPillar() {
@@ -184,11 +188,11 @@ public class ThrustCopterScene extends ScreenAdapter {
                 tapDrawTime=TAP_DRAW_TIME_MAX;
             }
         }
-//        smoke.setPosition(planePosition.x+20, planePosition.y+30);
-//        smoke.update(deltaTime);
+        smoke.setPosition(planePosition.x+20, planePosition.y+30);
+        smoke.update(deltaTime);
         if(gameState == GameState.INIT || gameState == GameState.GAME_OVER) {
             if(gameState == GameState.GAME_OVER) {
-//                explosion.update(deltaTime);
+                explosion.update(deltaTime);
             }
             return;
         }
@@ -270,9 +274,11 @@ public class ThrustCopterScene extends ScreenAdapter {
 
     private void endGame() {
         if (gameState != GameState.GAME_OVER) {
-            tapDrawTime = 0;
             crashSound.play();
+            tapDrawTime = 0;
             gameState = GameState.GAME_OVER;
+            explosion.reset();
+            explosion.setPosition(planePosition.x + 40, planePosition.y + 40);
         }
     }
 
@@ -384,22 +390,26 @@ public class ThrustCopterScene extends ScreenAdapter {
         for (Pickup pickup : pickupsInScene) {
             batch.draw(pickup.pickupTexture, pickup.pickupPosition.x, pickup.pickupPosition.y);
         }
+        smoke.draw(batch);
         batch.draw(plane.getKeyFrame(planeAnimTime), planePosition.x, planePosition.y);
 
         if (shieldCount > 0) {
             batch.draw(shield.getKeyFrame(planeAnimTime), planePosition.x - 20, planePosition.y);
+            font.draw(batch, String.format(("%d"), (int)shieldCount), 390, 450);
         }
 
         if (meteorInScene) {
             batch.draw(selectedMeteorTexture, meteorPosition.x, meteorPosition.y);
         }
 
+        font.draw(batch, String.format(("%d"), (int)(starCount + score)), 700, 450);
         batch.setColor(Color.BLACK);
         batch.draw(fuelIndicator, 10, 350);
         batch.setColor(Color.WHITE);
         batch.draw(fuelIndicator, 10, 350, 0, 0, fuelPercentage, 119);
-        font.draw(batch, String.format(("%d"), (int)shieldCount), 390, 450);
-        font.draw(batch, String.format(("%d"), (int)(starCount + score)), 700, 450);
+        if (gameState == GameState.GAME_OVER) {
+            explosion.draw(batch);
+        }
 
         batch.end();
     }
