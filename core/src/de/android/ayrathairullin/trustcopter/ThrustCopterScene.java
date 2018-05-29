@@ -175,12 +175,18 @@ public class ThrustCopterScene extends ScreenAdapter {
                 touchPosition.set(Gdx.input.getX(),Gdx.input.getY(),0);
                 camera.unproject(touchPosition);
                 tmpVector.set(planePosition.x,planePosition.y);
-                tmpVector.sub(touchPosition.x, touchPosition.y).nor();
-                planeVelocity.mulAdd(tmpVector, TOUCH_IMPULSE-MathUtils.clamp(Vector2.dst(touchPosition.x, touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
+                tmpVector.sub( touchPosition.x, touchPosition.y).nor();
+                planeVelocity.mulAdd(tmpVector, TOUCH_IMPULSE-MathUtils.clamp(
+                        Vector2.dst(touchPosition.x, touchPosition.y, planePosition.x, planePosition.y), 0, TOUCH_IMPULSE));
                 tapDrawTime=TAP_DRAW_TIME_MAX;
             }
         }
+//        smoke.setPosition(planePosition.x+20, planePosition.y+30);
+//        smoke.update(deltaTime);
         if(gameState == GameState.INIT || gameState == GameState.GAME_OVER) {
+            if(gameState == GameState.GAME_OVER) {
+//                explosion.update(deltaTime);
+            }
             return;
         }
         //float deltaTime = Gdx.graphics.getDeltaTime();
@@ -218,7 +224,7 @@ public class ThrustCopterScene extends ScreenAdapter {
             if(vec.x+pillarUp.getRegionWidth()<-10){
                 pillars.removeValue(vec, false);
             }
-            if(shieldCount<0){
+            if(shieldCount<=0){
                 if(vec.y==1){
                     obstacleRect.set(vec.x + 10, 0, pillarUp.getRegionWidth()-20, pillarUp.getRegionHeight()-10);
                 }else{
