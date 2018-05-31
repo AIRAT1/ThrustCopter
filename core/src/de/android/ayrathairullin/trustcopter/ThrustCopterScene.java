@@ -100,13 +100,17 @@ public class ThrustCopterScene extends ScreenAdapter {
                 atlas.findRegion("shield2"));
         shield.setPlayMode(PlayMode.LOOP);
 
-        music = game.manager.get("sounds/journey.mp3", Music.class);
-        music.setLooping(true);
-        music.play();
+        if (game.soundEnabled) {
+            music = game.manager.get("sounds/journey.mp3", Music.class);
+            music.setLooping(true);
+            music.play();
+            music.setVolume(game.soundVolume);
 
-        tapSound = game.manager.get("sounds/pop.ogg", Sound.class);
-        crashSound = game.manager.get("sounds/crash.ogg", Sound.class);
-        spawnSound = game.manager.get("sounds/alarm.ogg", Sound.class);
+            tapSound = game.manager.get("sounds/pop.ogg", Sound.class);
+            crashSound = game.manager.get("sounds/crash.ogg", Sound.class);
+            spawnSound = game.manager.get("sounds/alarm.ogg", Sound.class);
+        }
+
         fuelIndicator = game.manager.get("life.png", Texture.class);
 
 //        font = game.manager.get("impact-40.fnt", BitmapFont.class);
@@ -167,7 +171,9 @@ public class ThrustCopterScene extends ScreenAdapter {
 
     private void updateScene(float deltaTime) {
         if(Gdx.input.justTouched()){
-            tapSound.play();
+            if (game.soundEnabled) {
+                tapSound.play(game.soundVolume);
+            }
             if(gameState == GameState.INIT) {
                 gameState = GameState.ACTION;
                 return;
@@ -273,7 +279,9 @@ public class ThrustCopterScene extends ScreenAdapter {
 
     private void endGame() {
         if (gameState != GameState.GAME_OVER) {
-            crashSound.play();
+            if (game.soundEnabled) {
+                crashSound.play(game.soundVolume);
+            }
             tapDrawTime = 0;
             gameState = GameState.GAME_OVER;
             explosion.reset();
@@ -286,7 +294,9 @@ public class ThrustCopterScene extends ScreenAdapter {
         if (meteorInScene) {
             return;
         }
-        spawnSound.play();
+        if (game.soundEnabled) {
+            spawnSound.play(game.soundVolume);
+        }
         meteorInScene = true;
         int id = (int) Math.random() * meteorTextures.size;
         selectedMeteorTexture = meteorTextures.get(id);
@@ -339,7 +349,9 @@ public class ThrustCopterScene extends ScreenAdapter {
     }
 
     private void pickIt(Pickup pickup) {
-        pickup.pickupSound.play();
+        if (game.soundEnabled) {
+            pickup.pickupSound.play(game.soundVolume);
+        }
         switch(pickup.pickupType){
             case Pickup.STAR:
                 starCount+=pickup.pickupValue;

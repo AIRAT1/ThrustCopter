@@ -17,7 +17,7 @@ import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.badlogic.gdx.utils.viewport.Viewport;
 
-public class LoadingScreen extends ScreenAdapter{
+public class LoadingScene extends ScreenAdapter{
     public static final int SCREEN_WIDTH = 800;
     public static final int SCREEN_HEIGHT = 480;
     private static final float PROGRESS_BAR_WIDTH = 100;
@@ -31,7 +31,7 @@ public class LoadingScreen extends ScreenAdapter{
 
     private ThrustCopter game;
 
-    public LoadingScreen(ThrustCopter thrustCopter) {
+    public LoadingScene(ThrustCopter thrustCopter) {
         game = thrustCopter;
     }
 
@@ -51,6 +51,7 @@ public class LoadingScreen extends ScreenAdapter{
         shapeRenderer = new ShapeRenderer();
 
         game.manager.load("gameover.png", Texture.class);
+        game.manager.load("title.png", Texture.class);
         game.manager.load("life.png", Texture.class);
         game.manager.load("sounds/journey.mp3", Music.class);
         game.manager.load("sounds/pop.ogg", Sound.class);
@@ -84,7 +85,7 @@ public class LoadingScreen extends ScreenAdapter{
         if (game.manager.update()) {
             game.atlas = game.manager.get("ThrustCopter.pack", TextureAtlas.class);
             game.font = game.manager.get("impact-40.fnt", BitmapFont.class);
-            game.setScreen(new ThrustCopterScene(game));
+            game.setScreen(new MenuScene(game));
         }else {
             progress = game.manager.getProgress();
         }

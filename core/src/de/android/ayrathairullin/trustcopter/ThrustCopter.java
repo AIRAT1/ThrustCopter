@@ -22,6 +22,8 @@ public class ThrustCopter extends Game {
     SpriteBatch batch;
     AssetManager manager;
     BitmapFont font;
+    public boolean soundEnabled;
+    public float soundVolume;
 
     public ThrustCopter() {
         manager = new AssetManager();
@@ -30,6 +32,9 @@ public class ThrustCopter extends Game {
         camera = new OrthographicCamera();
         camera.position.set(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, 0);
         viewport = new FitViewport(SCREEN_WIDTH, SCREEN_HEIGHT, camera);
+
+        soundEnabled = true;
+        soundVolume = 1;
     }
 
     @Override
@@ -51,7 +56,7 @@ public class ThrustCopter extends Game {
 //        atlas = manager.get("ThrustCopter.pack", TextureAtlas.class);
 
         batch = new SpriteBatch();
-        setScreen(new LoadingScreen(this));
+        setScreen(new LoadingScene(this));
     }
 
     @Override
