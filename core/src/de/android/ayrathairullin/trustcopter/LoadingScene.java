@@ -101,8 +101,8 @@ public class LoadingScene extends ScreenAdapter{
         shapeRenderer.setTransformMatrix(camera.view);
         shapeRenderer.begin(ShapeRenderer.ShapeType.Filled);
         shapeRenderer.setColor(Color.WHITE);
-        shapeRenderer.rect(SCREEN_WIDTH / 2 - PROGRESS_BAR_WIDTH / 2,
-                SCREEN_HEIGHT / 2 - PROGRESS_BAR_HEIGHT / 2,
+        shapeRenderer.rect(
+                SCREEN_WIDTH / 2 - PROGRESS_BAR_WIDTH / 2, SCREEN_HEIGHT / 2 - PROGRESS_BAR_HEIGHT / 2,
                 progress * PROGRESS_BAR_WIDTH, PROGRESS_BAR_HEIGHT);
         shapeRenderer.end();
     }
