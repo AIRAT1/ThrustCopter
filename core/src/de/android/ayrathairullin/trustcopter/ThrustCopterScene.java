@@ -9,7 +9,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -20,7 +19,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
-import static com.badlogic.gdx.graphics.g2d.Animation.*;
+import static com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 
 public class ThrustCopterScene extends ScreenAdapter {
     private static final int TOUCH_IMPULSE = 500;
@@ -65,7 +64,7 @@ public class ThrustCopterScene extends ScreenAdapter {
     private int starCount, fuelPercentage;
     private float fuelCount, shieldCount, score;
     private Animation<TextureRegion> shield;
-    private BitmapFont font;
+//    private BitmapFont font;
     private ParticleEffect smoke, explosion;
     private Texture fuelIndicator;
 
@@ -110,7 +109,7 @@ public class ThrustCopterScene extends ScreenAdapter {
         spawnSound = game.manager.get("sounds/alarm.ogg", Sound.class);
         fuelIndicator = game.manager.get("life.png", Texture.class);
 
-        font = game.manager.get("impact-40.fnt", BitmapFont.class);
+//        font = game.manager.get("impact-40.fnt", BitmapFont.class);
         smoke = game.manager.get("Smoke",  ParticleEffect.class);
         explosion = game.manager.get("Explosion",  ParticleEffect.class);
 
@@ -395,14 +394,14 @@ public class ThrustCopterScene extends ScreenAdapter {
 
         if (shieldCount > 0) {
             batch.draw(shield.getKeyFrame(planeAnimTime), planePosition.x - 20, planePosition.y);
-            font.draw(batch, String.format(("%d"), (int)shieldCount), 390, 450);
+            game.font.draw(batch, String.format(("%d"), (int)shieldCount), 390, 450);
         }
 
         if (meteorInScene) {
             batch.draw(selectedMeteorTexture, meteorPosition.x, meteorPosition.y);
         }
 
-        font.draw(batch, String.format(("%d"), (int)(starCount + score)), 700, 450);
+        game.font.draw(batch, String.format(("%d"), (int)(starCount + score)), 700, 450);
         batch.setColor(Color.BLACK);
         batch.draw(fuelIndicator, 10, 350);
         batch.setColor(Color.WHITE);

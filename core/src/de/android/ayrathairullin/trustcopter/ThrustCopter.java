@@ -3,13 +3,9 @@ package de.android.ayrathairullin.trustcopter;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.audio.Music;
-import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.FPSLogger;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.ParticleEffect;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.utils.viewport.FitViewport;
@@ -25,6 +21,7 @@ public class ThrustCopter extends Game {
     Viewport viewport;
     SpriteBatch batch;
     AssetManager manager;
+    BitmapFont font;
 
     public ThrustCopter() {
         manager = new AssetManager();
@@ -37,24 +34,24 @@ public class ThrustCopter extends Game {
 
     @Override
     public void create() {
-        manager.load("gameover.png", Texture.class);
-        manager.load("life.png", Texture.class);
-        manager.load("sounds/journey.mp3", Music.class);
-        manager.load("sounds/pop.ogg", Sound.class);
-        manager.load("sounds/crash.ogg", Sound.class);
-        manager.load("sounds/alarm.ogg", Sound.class);
-        manager.load("sounds/star.ogg", Sound.class);
-        manager.load("sounds/shield.ogg", Sound.class);
-        manager.load("sounds/fuel.ogg", Sound.class);
-        manager.load("ThrustCopter.pack", TextureAtlas.class);
-        manager.load("impact-40.fnt", BitmapFont.class);
-        manager.load("Smoke", ParticleEffect.class);
-        manager.load("Explosion", ParticleEffect.class);
-        manager.finishLoading();
+//        manager.load("gameover.png", Texture.class);
+//        manager.load("life.png", Texture.class);
+//        manager.load("sounds/journey.mp3", Music.class);
+//        manager.load("sounds/pop.ogg", Sound.class);
+//        manager.load("sounds/crash.ogg", Sound.class);
+//        manager.load("sounds/alarm.ogg", Sound.class);
+//        manager.load("sounds/star.ogg", Sound.class);
+//        manager.load("sounds/shield.ogg", Sound.class);
+//        manager.load("sounds/fuel.ogg", Sound.class);
+//        manager.load("ThrustCopter.pack", TextureAtlas.class);
+//        manager.load("impact-40.fnt", BitmapFont.class);
+//        manager.load("Smoke", ParticleEffect.class);
+//        manager.load("Explosion", ParticleEffect.class);
+//        manager.finishLoading();
+//        atlas = manager.get("ThrustCopter.pack", TextureAtlas.class);
 
         batch = new SpriteBatch();
-        atlas = manager.get("ThrustCopter.pack", TextureAtlas.class);
-        setScreen(new ThrustCopterScene(this));
+        setScreen(new LoadingScreen(this));
     }
 
     @Override
