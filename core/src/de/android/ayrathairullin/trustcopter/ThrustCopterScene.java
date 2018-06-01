@@ -1,7 +1,6 @@
 package de.android.ayrathairullin.trustcopter;
 
 import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
@@ -21,7 +20,7 @@ import com.badlogic.gdx.utils.Array;
 
 import static com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
 
-public class ThrustCopterScene extends ScreenAdapter {
+public class ThrustCopterScene extends BaseScene {
     private static final int TOUCH_IMPULSE = 500;
     private static final float TAP_DRAW_TIME_MAX = 1.0f;
     private static final int METEOR_SPEED = 6; // TODO default value 60
@@ -30,7 +29,7 @@ public class ThrustCopterScene extends ScreenAdapter {
         INIT, ACTION, GAME_OVER
     }
 
-    private ThrustCopter game;
+//    private ThrustCopter game;
     private GameState gameState = GameState.INIT;
     private SpriteBatch batch;
     private OrthographicCamera camera;
@@ -68,8 +67,11 @@ public class ThrustCopterScene extends ScreenAdapter {
     private ParticleEffect smoke, explosion;
     private Texture fuelIndicator;
 
+    private boolean gamePaused = false;
+
     public ThrustCopterScene(ThrustCopter thrustCopter) {
-        game = thrustCopter;
+        super(thrustCopter);
+//        game = thrustCopter;
         batch = game.batch;
         camera = game.camera;
         camera.position.set(400, 240, 0);
@@ -163,6 +165,10 @@ public class ThrustCopterScene extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
+        super.render(delta);
+        if (gamePaused) {
+            return;
+        }
         Gdx.gl.glClearColor(1, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         updateScene(delta);
@@ -287,6 +293,25 @@ public class ThrustCopterScene extends ScreenAdapter {
             explosion.reset();
             explosion.setPosition(planePosition.x + 40, planePosition.y + 40);
         }
+    }
+
+    @Override
+    protected void handleBackPress() {
+        if (gamePaused) {
+            resume();
+        }else {
+            pause();
+        }
+    }
+
+    @Override
+    public void pause() {
+        gamePaused = true;
+    }
+
+    @Override
+    public void resume() {
+        gamePaused = false;
     }
 
     private void launchMeteor() {
@@ -433,5 +458,7 @@ public class ThrustCopterScene extends ScreenAdapter {
         music.dispose();
         pillars.clear();
         meteorTextures.clear();
+        smoke.dispose();
+        explosion.dispose();
     }
 }
