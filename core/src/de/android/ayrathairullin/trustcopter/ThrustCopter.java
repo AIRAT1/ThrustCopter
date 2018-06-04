@@ -15,13 +15,13 @@ public class ThrustCopter extends Game {
     public static final int SCREEN_WIDTH = 800;
     public static final int SCREEN_HEIGHT = 480;
 
-    TextureAtlas atlas;
-    FPSLogger fpsLogger;
-    OrthographicCamera camera;
-    Viewport viewport;
-    SpriteBatch batch;
-    AssetManager manager;
-    BitmapFont font;
+    public TextureAtlas atlas;
+    public FPSLogger fpsLogger;
+    public OrthographicCamera camera;
+    public Viewport viewport;
+    public SpriteBatch batch;
+    public AssetManager manager;
+    public BitmapFont font;
     public boolean soundEnabled;
     public float soundVolume;
 
