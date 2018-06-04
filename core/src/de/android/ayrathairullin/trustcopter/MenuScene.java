@@ -53,7 +53,7 @@ public class MenuScene extends BaseScene{
         helpTip=new Label("Tap around the plane to move it!",skin);
         helpTip.setColor(Color.NAVY);
 
-        table=new Table().debug();
+        table=new Table();
         playButton=new TextButton("PLAY GAME", skin);
         table.add(playButton).padBottom(10);
         table.row();
@@ -67,7 +67,7 @@ public class MenuScene extends BaseScene{
         table.add(exitButton);
         table.setPosition(400, -200);
 
-        options=new Table().debug();
+        options=new Table();
         Label soundTitle=new Label("SOUND OPTIONS",skin);
         soundTitle.setColor(Color.NAVY);
         options.add(soundTitle).padBottom(25).colspan(2);
@@ -85,7 +85,7 @@ public class MenuScene extends BaseScene{
         muteCheckBox.setChecked(!game.soundEnabled);
         volumeSlider.setValue(game.soundVolume);
 
-        exit=new Table().debug();
+        exit=new Table();
         Label exitTitle=new Label("Confirm Exit",skin);
         exitTitle.setColor(Color.NAVY);
         exit.add(exitTitle).padBottom(25).colspan(2);
@@ -118,7 +118,8 @@ public class MenuScene extends BaseScene{
         exitButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                Gdx.app.exit();
+//                Gdx.app.exit();
+                showExit(true);
                 // or System.exit(0);
             }
         });
