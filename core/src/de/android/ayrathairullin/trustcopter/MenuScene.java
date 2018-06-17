@@ -21,6 +21,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
+import de.android.ayrathairullin.trustcopter.box2d.ThrustCopterSceneBox2D;
+
 public class MenuScene extends BaseScene{
     private Stage stage;
     private Image screenBg;
@@ -106,7 +108,9 @@ public class MenuScene extends BaseScene{
         playButton.addListener(new ClickListener(){
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new ThrustCopterScene(game));
+                // TODO change screen to use Box2D
+//                game.setScreen(new ThrustCopterScene(game));
+                game.setScreen(new ThrustCopterSceneBox2D(game));
             }
         });
         optionsButton.addListener(new ClickListener(){
