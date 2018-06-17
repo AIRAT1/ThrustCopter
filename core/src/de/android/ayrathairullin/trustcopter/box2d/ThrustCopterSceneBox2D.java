@@ -4,6 +4,7 @@ package de.android.ayrathairullin.trustcopter.box2d;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
@@ -392,6 +393,78 @@ public class ThrustCopterSceneBox2D extends BaseScene{
             setForRemoval.clear();
         }
 //        planePosition = planeBody.getPosition();
+
+    }
+
+    private void drawSceneBox2D() {
+        camera.update();
+        batch.setProjectionMatrix(camera.combined);
+        batch.begin();
+        batch.disableBlending();
+        batch.draw(bgRegion, 0, 0);
+        batch.enableBlending();
+
+        for (Body vec : pillars) {
+            tmpVector.set(vec.getPosition());
+            tmpVector.scl(BOX2D_TO_CAMERA);
+            tmpVector.x -= (box2dCam.position.x - 40) * BOX2D_TO_CAMERA;
+            toDraw = (TextureRegion)vec.getUserData();
+            batch.draw(toDraw, tmpVector.x - toDraw.getRegionWidth() / 2, tmpVector.y - toDraw.getRegionHeight() / 2);
+        }
+
+        batch.draw(terrainBelow, terrainOffset, 0);
+        batch.draw(terrainBelow, terrainOffset + terrainBelow.getRegionWidth(), 0);
+        batch.draw(terrainAbove, terrainOffset, terrainAbove.getRegionHeight());
+        batch.draw(terrainAbove, terrainOffset + terrainAbove.getRegionWidth(), 480 - terrainAbove.getRegionHeight());
+
+        if (tapDriveTime > 0) {
+            batch.draw(tap2, touchPosition.x - 29.5f, touchPosition.y - 29.5f);
+        }
+
+        if (gameState == GameState.Init) {
+            batch.draw(tap1, planePosition.x, planePosition.y - 80);
+        }
+
+        if (gameState == GameState.GameOver) {
+            batch.draw(gameOver, 400 - 206, 240 - 80);
+        }
+
+        for (Body pickup : pickupsInScene) {
+            tempPickup = (Pickup)pickup.getUserData();
+            tmpVector.set(pickup.getPosition());
+            tmpVector.scl(BOX2D_TO_CAMERA);
+            tmpVector.x -= (box2dCam.position.x - 40) * BOX2D_TO_CAMERA;
+            batch.draw(tempPickup.pickupTexture, tmpVector.x - 19, tmpVector.y - 19);
+        }
+        planePosition = planeBody.getPosition();
+        planePosition.scl(BOX2D_TO_CAMERA);
+        smoke.setPosition(planePosition.x+20-(box2dCam.position.x-40)*BOX2D_TO_CAMERA-44,
+                planePosition.y-7);
+        smoke.draw(batch);
+        batch.draw(plane.getKeyFrame(planeAnimTime), planePosition.x-(box2dCam.position.x-40)*
+                BOX2D_TO_CAMERA-44, planePosition.y-36.5f);
+        if (shieldCount > 0) {
+            batch.draw(shield.getKeyFrame(planeAnimTime), planePosition.x-20-(box2dCam.position.x-40)*
+                    BOX2D_TO_CAMERA-44, planePosition.y-36.5f);
+            font.draw(batch, ""+((int)shieldCount), 390, 450);
+        }
+        if (meteorInScene) {
+            batch.draw(selectedMeteorTexture,meteorPosition.x-(box2dCam.position.x-40)*
+                    BOX2D_TO_CAMERA-selectedMeteorTexture.getRegionWidth()/2,
+                    meteorPosition.y-selectedMeteorTexture.getRegionHeight()/2);
+        }
+        font.draw(batch, ""+(int)(starCount+score), 700, 450);
+        batch.setColor(Color.BLACK);
+        batch.draw(fuelIndicator, 10, 350);
+        batch.setColor(Color.WHITE);
+        batch.draw(fuelIndicator, 10, 350, 0, 0, fuelPercentage, 119);
+        if (gameState == GameState.GameOver) {
+            explosion.draw(batch);
+        }
+        batch.end();
+    }
+
+    private void addPillar() {
 
     }
 }
