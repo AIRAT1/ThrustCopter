@@ -24,9 +24,11 @@ import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
 import com.badlogic.gdx.physics.box2d.ContactListener;
+import com.badlogic.gdx.physics.box2d.Fixture;
 import com.badlogic.gdx.physics.box2d.FixtureDef;
 import com.badlogic.gdx.physics.box2d.Manifold;
 import com.badlogic.gdx.physics.box2d.PolygonShape;
+import com.badlogic.gdx.physics.box2d.QueryCallback;
 import com.badlogic.gdx.physics.box2d.World;
 import com.badlogic.gdx.utils.Array;
 
@@ -34,8 +36,8 @@ import de.android.ayrathairullin.trustcopter.BaseScene;
 import de.android.ayrathairullin.trustcopter.Pickup;
 import de.android.ayrathairullin.trustcopter.ThrustCopter;
 
-import static com.badlogic.gdx.graphics.g2d.Animation.*;
-import static com.badlogic.gdx.physics.box2d.BodyDef.*;
+import static com.badlogic.gdx.graphics.g2d.Animation.PlayMode;
+import static com.badlogic.gdx.physics.box2d.BodyDef.BodyType;
 
 public class ThrustCopterSceneBox2D extends BaseScene{
     private static final boolean DRAW_BOX2D_DEBUG = true;
@@ -83,6 +85,7 @@ public class ThrustCopterSceneBox2D extends BaseScene{
     BitmapFont font;
     ParticleEffect smoke, explosion;
     private boolean gamePaused = false;
+    private static final int meteorSpeed = 50;
 
     static enum GameState {
         Init, Action, GameOver
@@ -465,6 +468,187 @@ public class ThrustCopterSceneBox2D extends BaseScene{
     }
 
     private void addPillar() {
+        if (pillars.size == 0) {
+            tmpVector.x = (float)(800 + Math.random() * 400);
+        }else {
+            tmpVector.x = lastPillarBody.getPosition().x * BOX2D_TO_CAMERA + (float)(600 + Math.random() * 400);
+        }
+        Body pillar;
+        if(MathUtils.randomBoolean()){
+            pillar = createPillarBody(pillarUp, new Vector2(tmpVector.x + pillarUp.getRegionWidth() / 2,
+                    pillarUp.getRegionHeight() / 2),BodyType.StaticBody);
+        }else{
+            pillar = createPillarBody(pillarDown, new Vector2(tmpVector.x + pillarDown.getRegionWidth() / 2,
+                    480 - pillarDown.getRegionHeight() / 2),BodyType.StaticBody);
+        }
+        lastPillarBody = pillar;
+        pillars.add(pillar);
+    }
 
+    private Body createPillarBody(TextureRegion region, Vector2 position, BodyType bodyType) {
+        BodyDef boxBodyDef = new BodyDef();
+        boxBodyDef.type = bodyType;
+        boxBodyDef.position.x = position.x / BOX2D_TO_CAMERA;
+        boxBodyDef.position.y = position.y / BOX2D_TO_CAMERA;
+        Body boxBody = world.createBody(boxBodyDef);
+        PolygonShape trianglePoly = new PolygonShape();
+
+        if(region == pillarUp){
+            float[] vertices = {-5.4f, -11.95f, 1.1f, 11.95f, 5.4f, -11.95f};
+            trianglePoly.set(vertices);
+        }else{
+            float[] vertices = {-5.4f, 11.95f, 5.4f, 11.95f, 1.1f, -11.95f};
+            trianglePoly.set(vertices);
+        }
+
+        boxBody.createFixture(trianglePoly, 1);
+        trianglePoly.dispose();
+        boxBody.setUserData(region);
+        return boxBody;
+    }
+
+    private void launchMeteor() {
+        nextMeteorIn = 1.5f + (float)Math.random() * 5;
+        if (meteorInScene) {
+            return;
+        }
+        tmpVector.set(box2dCam.position.x + 42, 0);
+        if (game.soundEnabled) {
+            spawnSound.play(game.soundVolume);
+        }
+        meteorInScene = true;
+        tmpVector.y = (float)(80 + Math.random() * 320) / BOX2D_TO_CAMERA;
+        meteorBody.setTransform(tmpVector, 0);
+        Vector2 destination = new Vector2();
+        destination.x = box2dCam.position.x - 42;
+        destination.y = (float)(80 + Math.random() * 320) / BOX2D_TO_CAMERA;
+        destination.sub(tmpVector).nor();
+        destination.scl(meteorSpeed);
+        meteorBody.setLinearVelocity(destination);
+    }
+
+    private void checkAndCreatePickup(float delta) {
+        pickupTiming.sub(delta);
+        if(pickupTiming.x<=0){
+            pickupTiming.x=(float)(0.5+Math.random()*0.5);
+            if(addPickup(Pickup.STAR))
+                pickupTiming.x=1+(float)Math.random()*2;
+        }
+        if(pickupTiming.y<=0){
+            pickupTiming.y=(float)(0.5+Math.random()*0.5);
+            if(addPickup(Pickup.FUEL))
+                pickupTiming.y=3+(float)Math.random()*2;
+        }
+        if(pickupTiming.z<=0){
+            pickupTiming.z=(float)(0.5+Math.random()*0.5);
+            if(addPickup(Pickup.SHIELD))
+                pickupTiming.z=10+(float)Math.random()*3;
+        }
+    }
+
+    /** we instantiate this vector and the callback here so we don't irritate the GC **/
+    Vector3 testPoint = new Vector3();
+    QueryCallback callback = new QueryCallback() {
+        @Override
+        public boolean reportFixture (Fixture fixture) {
+            // if the hit point is inside the fixture of the body
+            // we report it
+            if (fixture.testPoint(testPoint.x, testPoint.y)) {
+                hitBody = fixture.getBody();
+                return false;
+            } else
+                return true;
+        }
+    };
+
+    private boolean addPickup(int pickupType) {
+        testPoint.x=box2dCam.position.x+42;
+        testPoint.y=(float)(80+Math.random()*320)/BOX2D_TO_CAMERA;
+
+        hitBody = null;
+        world.QueryAABB(callback, testPoint.x - 1.9f, testPoint.y - 1.9f, testPoint.x + 1.9f, testPoint.y + 1.9f);
+
+        if (hitBody != null) {
+            return false;
+        }
+        testPoint.scl(BOX2D_TO_CAMERA);
+        tempPickup=new Pickup(pickupType, game.manager);
+        Body pickupBody=createPhysicsObjectFromGraphics(tempPickup.pickupTexture,new Vector2(testPoint.x,testPoint.y),BodyType.StaticBody);
+        pickupBody.setUserData(tempPickup);
+        pickupsInScene.add(pickupBody);
+        return true;
+    }
+
+    private void pickIt(Body pickupBody) {
+        Pickup pickup=(Pickup)pickupBody.getUserData();
+        if(game.soundEnabled)pickup.pickupSound.play(game.soundVolume);
+        switch(pickup.pickupType){
+            case Pickup.STAR:
+                starCount+=pickup.pickupValue;
+                break;
+            case Pickup.SHIELD:
+                shieldCount=pickup.pickupValue;
+                break;
+            case Pickup.FUEL:
+                fuelCount=pickup.pickupValue;
+                break;
+        }
+        setForRemoval.add(pickupBody);
+        pickupsInScene.removeValue(pickupBody, false);
+    }
+
+    private void endGame(){
+        if(gameState != GameState.GameOver){
+            if(game.soundEnabled)crashSound.play(game.soundVolume);
+            planeBody.setAwake(false);
+            gameState = GameState.GameOver;
+            explosion.reset();
+            planePosition=planeBody.getPosition();
+            planePosition.scl(BOX2D_TO_CAMERA);
+            explosion.setPosition(planePosition.x-(box2dCam.position.x-40)*BOX2D_TO_CAMERA+10, planePosition.y);
+
+        }
+    }
+
+    private ItemType getItemType(Body body) {
+        if(body.equals(meteorBody)){
+            return ItemType.Meteor;
+        }else if(body.equals(terrainBodyDown)||body.equals(terrainBodyUp)){
+            return ItemType.Terrain;
+        }else if(pickupsInScene.contains(body, false)){// body.getUserData() instanceof Pickup){
+            return ItemType.Pickup;
+        }else {
+            return ItemType.Pillar;
+        }
+    }
+
+    @Override
+    protected void handleBackPress() {
+        if (gamePaused) {
+            resume();
+        }else {
+            pause();
+        }
+    }
+
+    @Override
+    public void pause() {
+        gamePaused = true;
+    }
+
+    @Override
+    public void resume() {
+        gamePaused = false;
+    }
+
+    @Override
+    public void dispose() {
+        tapSound.dispose();
+        crashSound.dispose();
+        spawnSound.dispose();
+        music.dispose();
+        pillars.clear();
+        smoke.dispose();
+        explosion.dispose();
     }
 }

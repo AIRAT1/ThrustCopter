@@ -14,8 +14,8 @@ public class Pickup {
 
     public TextureRegion pickupTexture;
     Vector2 pickupPosition = new Vector2();
-    int pickupType, pickupValue;
-    Sound pickupSound;
+    public int pickupType, pickupValue;
+    public Sound pickupSound;
 
     public Pickup(int type, AssetManager manager) {
         TextureAtlas atlas = manager.get("ThrustCopter.pack", TextureAtlas.class);
